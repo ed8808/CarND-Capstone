@@ -50,7 +50,8 @@ class WaypointUpdater(object):
           if self.pose and self.base_waypoints:
             # Get closest waypoint
             closest_waypoint_idx = self.get_closest_waypoint_idx()
-            self.publish_waypoints(closest_waypoint_idx)
+            if closest_waypoint_idx:
+              self.publish_waypoints(closest_waypoint_idx)
           rate.sleep()
 
     def get_closest_waypoint_idx(self):
@@ -72,13 +73,13 @@ class WaypointUpdater(object):
 
           if val > 0:
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
-          return closest_idx
+            return closest_idx
     
     def publish_waypoints(self, closest_idx):
           lane = Lane()
           lane.header = self.base_waypoints.header
           lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx + LOOKAHEAD_WPS]
-          self.final_waypoints.pub.publish(lane)
+          self.final_waypoints_pub.publish(lane)
 
     def pose_cb(self, msg):
         self.pose = msg
