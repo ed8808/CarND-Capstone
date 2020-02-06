@@ -116,8 +116,6 @@ class DBWNode(object):
         self.angular_velocity = msg.twist.angular.z
 
     def dbwe_cb(self, msg):
-        if self.dbw_enabled != msg:
-          rospy.logwarn("DBW: {0}".format(msg))
         self.dbw_enabled = msg
 
 if __name__ == '__main__':
