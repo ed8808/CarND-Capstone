@@ -2,9 +2,11 @@
 
 import rospy
 from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Int32
+from sensor_msgs.msg import PointCloud2
 from styx_msgs.msg import Lane, Waypoint
 from scipy.spatial import KDTree
-
+import yaml
 import math
 import numpy as np
 
@@ -23,7 +25,7 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 30 # Number of waypoints we will publish. You can change this number
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -33,14 +35,20 @@ class WaypointUpdater(object):
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
+        rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
+        rospy.Subscriber('/obstacle_waypoint', PointCloud2, self.obstacle_cb)
 
         self.final_waypoints_pub = rospy.Publisher('/final_waypoints', Lane, queue_size=1)
+
+        config_string = rospy.get_param("/traffic_light_config")
+        self.config = yaml.load(config_string)
 
         # TODO: Add other member variables you need below
         self.pose = None
         self.base_waypoints = None
         self.waypoints_2d = None
         self.waypoint_tree = None
+        self.closest_waypoint_idx = None
 
         self.loop()
 
@@ -49,17 +57,17 @@ class WaypointUpdater(object):
         while not rospy.is_shutdown():
           if self.pose and self.base_waypoints:
             # Get closest waypoint
-            closest_waypoint_idx = self.get_closest_waypoint_idx()
-            self.publish_waypoints(closest_waypoint_idx)
+            x = self.pose.pose.position.x
+            y = self.pose.pose.position.y
+            closest_waypoint_idx = self.get_closest_waypoint_idx(x, y)
+            if closest_waypoint_idx:
+              self.closest_waypoint_idx = closest_waypoint_idx
+              self.publish_waypoints(closest_waypoint_idx)
           rate.sleep()
 
-    def get_closest_waypoint_idx(self):
-        x = self.pose.pose.position.x
-        y = self.pose.pose.position.y
+    def get_closest_waypoint_idx(self, x, y):
 
         if self.waypoint_tree:
-          #rospy.logwarn("x: {0}".format(x))
-          #rospy.logwarn("y: {0}".format(y))
           closest_idx = self.waypoint_tree.query([x, y], 1)[1]
 
           # Check if closest is ahead or behind vehicle
@@ -95,7 +103,9 @@ class WaypointUpdater(object):
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
-        pass
+        stop_line_wp = msg.data
+	d = self.distance(self.base_waypoints.waypoints, self.closest_waypoint_idx, stop_line_wp)
+        rospy.logwarn("distance to red stop {0}".format(d))
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
