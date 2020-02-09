@@ -105,7 +105,12 @@ class WaypointUpdater(object):
         # TODO: Callback for /traffic_waypoint message. Implement
         stop_line_wp = msg.data
 	d = self.distance(self.base_waypoints.waypoints, self.closest_waypoint_idx, stop_line_wp)
-        rospy.logwarn("distance to red stop {0}".format(d))
+
+	# v^2 - u^2 = 2as or s = ut + 0.5at^2
+        s = self.get_waypoint_velocity(self.base_waypoints.waypoints[self.closest_waypoint_idx])**2
+        if d < s:
+	  rospy.logwarn("distance to red stop {0}".format(d))
+          
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
