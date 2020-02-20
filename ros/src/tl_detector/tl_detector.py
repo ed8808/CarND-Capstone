@@ -8,6 +8,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from light_classification.tl_classifier import TLClassifier
 from scipy.spatial import KDTree
+from datetime import datetime
 import numpy as np
 import math
 import tf
@@ -79,7 +80,19 @@ class TLDetector(object):
         """
         self.has_image = True
         self.camera_image = msg
-        light_wp, state = self.process_traffic_lights()
+
+	light_wp, state = self.process_traffic_lights()
+
+	if light_wp:
+		now = datetime.now()
+		tt = now.strftime("%Y")+'_'+now.strftime("%m")+'_'+now.strftime("%d")+'-'+\
+	     	now.strftime("%H")+'_'+now.strftime("%H")+'_'+now.strftime("%M")+'_'+now.strftime("%S")+'f'+now.strftime("%f")
+		image_file = 'image/'+ tt + '.jpg'
+		with open(image_file,"w") as f:
+			cv2.imwrite(image_file, self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8"))
+		with open('image/light_state.csv',"a") as _f:
+			_f.write(tt+'.jpg'+','+str(state)+'\n')
+        
 
         '''
         Publish upcoming red lights at camera frequency.
@@ -122,10 +135,8 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        return light.state
-
-
-        '''
+        #return light.state
+	
         if(not self.has_image):
             self.prev_light_loc = None
             return False
@@ -134,7 +145,7 @@ class TLDetector(object):
 
         #Get classification
         return self.light_classifier.get_classification(cv_image)
-        '''
+        
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
