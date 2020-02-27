@@ -62,10 +62,9 @@ class TLDetector(object):
 
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
-	if not self.waypoints_2d:
+        if not self.waypoints_2d:
           self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in self.waypoints.waypoints]
           self.waypoint_tree = KDTree(self.waypoints_2d)
-        
 
     def traffic_cb(self, msg):
         self.lights = msg.lights
@@ -81,18 +80,16 @@ class TLDetector(object):
         self.has_image = True
         self.camera_image = msg
 
-	light_wp, state = self.process_traffic_lights()
+        light_wp, state = self.process_traffic_lights()
 
-	if light_wp:
-		now = datetime.now()
-		tt = now.strftime("%Y")+'_'+now.strftime("%m")+'_'+now.strftime("%d")+'-'+\
-	     	now.strftime("%H")+'_'+now.strftime("%H")+'_'+now.strftime("%M")+'_'+now.strftime("%S")+'f'+now.strftime("%f")
-		image_file = 'image/'+ tt + '.jpg'
-		with open(image_file,"w") as f:
-			cv2.imwrite(image_file, self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8"))
-		with open('image/light_state.csv',"a") as _f:
-			_f.write(tt+'.jpg'+','+str(state)+'\n')
-        
+        if light_wp:
+          now = datetime.now()
+          tt = now.strftime("%Y")+'_'+now.strftime("%m")+'_'+now.strftime("%d")+'-'+now.strftime("%H")+'_'+now.strftime("%H")+'_'+now.strftime("%M")+'_'+now.strftime("%S")+'f'+now.strftime("%f")
+          image_file = 'image/'+ tt + '.jpg'
+          with open(image_file,"w") as f:
+            cv2.imwrite(image_file, self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8"))
+            with open('image/light_state.csv',"a") as _f:
+              _f.write(tt+'.jpg'+','+str(state)+'\n')
 
         '''
         Publish upcoming red lights at camera frequency.
@@ -157,7 +154,7 @@ class TLDetector(object):
 
         """
         light = None
-	light_wp = None
+        light_wp = None
 
         # List of positions that correspond to the line to stop in front of for a given intersection
         stop_line_positions = self.config['stop_line_positions']
@@ -170,8 +167,8 @@ class TLDetector(object):
               if temp_line_wp_idx > car_wp_idx:
                 if temp_line_wp_idx - car_wp_idx < closest:
                   closest = temp_line_wp_idx - car_wp_idx
-		  line_wp_idx = temp_line_wp_idx
-		  light = self.lights[i]
+                  line_wp_idx = temp_line_wp_idx
+                  light = self.lights[i]
 
         if light:
             state = self.get_light_state(light)
