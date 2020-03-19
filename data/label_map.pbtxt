@@ -1,14 +1,14 @@
 item {
     id: 1
-    name: 'traffic_light_green'
+    name: 'Green'
 }
 
 item {
     id: 2
-    name: 'traffic_light_red'
+    name: 'Red'
 }
 
 item {
     id: 3
-    name: 'traffic_light_yellow'
+    name: 'Yellow'
 }
